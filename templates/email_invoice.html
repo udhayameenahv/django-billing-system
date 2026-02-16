@@ -1,0 +1,23 @@
+<h2>Invoice</h2>
+
+<p>Bill ID: {{ bill.id }}</p>
+<p>Total: {{ bill.total }}</p>
+<p>Paid: {{ bill.paid_amount }}</p>
+<p>Balance: {{ bill.balance }}</p>
+
+<hr>
+
+<table border="1" cellpadding="6">
+    <tr>
+        <th>Product</th>
+        <th>Qty</th>
+        <th>Total</th>
+    </tr>
+    {% for item in bill_items %}
+    <tr>
+        <td>{{ item.product.name }}</td>
+        <td>{{ item.quantity }}</td>
+        <td>{{ item.total }}</td>
+    </tr>
+    {% endfor %}
+</table>

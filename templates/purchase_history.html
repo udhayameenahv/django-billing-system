@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Purchase History</title>
+</head>
+<body>
+
+<h2>Purchase History</h2>
+
+{% if error %}
+    <p style="color:red;">{{ error }}</p>
+{% else %}
+
+    <p><strong>Customer:</strong> {{ customer.email }}</p>
+
+    {% if bills %}
+        <table border="1" cellpadding="8">
+            <thead>
+                <tr>
+                    <th>Bill ID</th>
+                    <th>Total</th>
+                    <th>Paid Amount</th>
+                    <th>Date</th>
+                    <th>View</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bill in bills %}
+                <tr>
+                    <td>{{ bill.id }}</td>
+                    <td>{{ bill.total }}</td>
+                    <td>{{ bill.paid_amount }}</td>
+                    <td>{{ bill.created_at }}</td>
+                    <td>
+                        <a href="{% url 'generate_bill' bill.id %}">
+                            View Details
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No previous purchases found.</p>
+    {% endif %}
+
+{% endif %}
+
+<br>
+<a href="{% url 'home' %}">Back to Billing</a>
+
+</body>
+</html>

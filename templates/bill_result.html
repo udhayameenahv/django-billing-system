@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bill Result</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; color: #111; }
+    .container { max-width: 980px; margin: 0 auto; }
+    h1 { font-size: 22px; margin: 0 0 16px; }
+    .card { border: 1px solid #e5e5e5; border-radius: 10px; padding: 16px; background: #fff; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; }
+    th { font-size: 13px; color: #333; }
+    .muted { color: #666; font-size: 12px; }
+    .grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+    .kv { display:flex; justify-content:space-between; gap:12px; padding:6px 0; }
+    .divider { height: 1px; background: #eee; margin: 16px 0; }
+  </style>
+</head>
+<body>
+  {% load template_tag %}
+  <div class="container">
+    <h1>Billing Invoice</h1>
+
+    <div class="card">
+      <div class="kv">
+        <div><strong>Customer Email</strong></div>
+        <div>{{ bill.customer.email }}</div>
+      </div>
+
+      <div style="height:1px; background:#eee; margin: 12px 0;"></div>
+
+      <div class="grid">
+        <div>
+          <strong>Bill section</strong>
+          <table style="margin-top:10px;">
+            <thead>
+              <tr>
+                <th>Product ID</th>
+                <th>Unit Price</th>
+                <th>Quantity</th>
+                <th>Purchase Price</th>
+                <th>Tax %</th>
+                <th>Tax payable</th>
+                <th>Total price</th>
+              </tr>
+            </thead>
+            <tbody>
+              {# Expect `lines` as list of dicts from your view calculation #}
+              {% for l in bill_items %}
+                <tr>
+                  <td>{{ l.product.id }}</td>
+                  <td>{{ l.product.price }}</td>
+                  <td>{{ l.quantity }}</td>
+                  <td>{{ l.price }}</td>
+                  <td>{{ l.product.tax_percentage }}</td>
+                  <td>{{ l.price|tax_payable:l.product.tax_percentage }}</td>
+                  <td>{{ l.total }}</td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="7" class="muted">No items.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        
+      </div>
+      <div class="divider"></div>
+      <div>
+        <strong>Summary</strong>
+        
+        <div style="margin-top:10px;">
+          <div class="kv"><div>Total price without tax:</div><div>{{ total_without_tax }}</div></div>
+          <div class="kv"><div>Total tax payable:</div><div>{{ total_tax }}</div></div>
+          <div class="kv"><div>Net price:</div><div>{{ net_total }}</div></div>
+          <div class="kv"><div>Rounded down net:</div><div>{{ rounded_net_total }}</div></div>
+          <div class="kv"><div>Balance payable to customer:</div><div>{{ balance }}</div></div>
+        </div>
+
+        <div style="height:1px; background:#eee; margin: 12px 0;"></div>
+
+        <strong>Balance Denomination</strong>
+        
+        <div style="margin-top:8px;">
+          {# Expect `change_breakdown` as list of {value, count} #}
+          {% for value, count in change_breakdown.items %}
+            <div class="kv"><div>{{ value }}:</div><div>{{ count }}</div></div>
+          {% empty %}
+            <div class="muted">No change.</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+
+

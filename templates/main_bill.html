@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Billing Page</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; color: #111; }
+    .container { max-width: 980px; margin: 0 auto; }
+    h1 { font-size: 22px; margin: 0 0 16px; }
+    .card { border: 1px solid #e5e5e5; border-radius: 10px; padding: 16px; background: #fff; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 35px; }
+    label { font-size: 13px; color: #333; display: block; margin-bottom: 6px; }
+    input { width: 50%; padding: 10px 10px; border: 1px solid #cfcfcf; border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; vertical-align: top; }
+    th { font-size: 13px; color: #333; }
+    .muted { color: #666; font-size: 12px; }
+    .actions { display: flex; gap: 10px; margin-top: 16px; }
+    button { padding: 10px 12px; border: 1px solid #cfcfcf; border-radius: 8px; background: #f7f7f7; cursor: pointer; }
+    button.primary { background: #111; color: #fff; border-color: #111; }
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; margin-top: 16px; }
+    .divider { height: 1px; background: #eee; margin: 16px 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Billing Page</h1>
+
+    <div class="card">
+
+      <form method="get" action="{% url 'purchase_history' %}">
+        <label for="history_email">Customer Email</label>
+        <input id="history_email"
+               name="email"
+               type="email"
+               placeholder="Email ID"
+               required />
+        <button type="submit">View Previous Purchases</button>
+      </form>
+  
+      <div class="divider"></div>
+      <form method="post" action="">
+        {% csrf_token %}
+
+        <div class="row">
+          <div>
+            <label for="customer_email">Customer Email</label>
+            <input id="customer_email" name="customer_email" type="email" placeholder="Email ID" required />
+          </div>
+         
+          <!-- <div>
+            <label for="paid_amount">Cash paid by customer</label>
+            <input id="paid_amount" name="paid_amount" type="number" step="0.01" min="0" placeholder="Amount" required />
+          </div> -->
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="split">
+          <div>
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+              <div>
+                <strong>Bill section</strong><div class="muted"></div>
+              </div>
+              <button type="button" id="add-item-btn">Add New</button>
+            </div>
+
+            <table style="margin-top:10px;">
+              <thead>
+                <tr>
+                  <th style="width:60%;">Product ID</th>
+                  <th style="width:30%;">Quantity</th>
+                  <th style="width:10%;"></th>
+                </tr>
+              </thead>
+              <tbody id="items-body">
+                <tr>
+                  <td>
+                    <select name="product_id" required style="width: 85%; padding: 10px 10px; border: 1px solid #cfcfcf; border-radius: 8px;">
+                      <option value="" selected disabled>Select product</option>
+                      {% for p in products %}
+                        <option value="{{ p.id }}">{{ p.name }}</option>
+                      {% endfor %}
+                    </select>
+                  </td>
+                  <td><input name="quantity" type="number" min="1" placeholder="Quantity" required></td>
+                  <td><button type="button" class="remove-btn">X</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div>
+            <strong>Denominations</strong>
+            <div class="muted"></div>
+
+            <table style="margin-top:10px;">
+              <thead>
+                <tr>
+                  <th>Value</th>
+                  <th>Count</th>
+                </tr>
+              </thead>
+              <tbody>
+                {# Expect `drawer_denoms` as list of Denomination rows where bill is NULL #}
+                {% for d in drawer_denoms %}
+                  <tr>
+                    <td>{{ d.value }}</td>
+                    <td>
+                      <input
+                        name="denom_count_{{ d.value }}"
+                        type="number"
+                        min="0"
+                        value="{{ d.count }}"
+                        aria-label="Count for {{ d.value }}"
+                      />
+                    </td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="2" class="muted">No denominations found. Seed 500, 50, 20, 10, 5, 2, 1.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <label for="paid_amount">Cash paid by customer</label>
+          <input id="paid_amount" name="paid_amount" type="number" step="0.01" min="0" placeholder="Amount" required />
+        </div>
+        <div class="actions">
+          <button type="reset">Cancel</button>
+          <button class="primary" type="submit">Generate Bill</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const body = document.getElementById("items-body");
+      const addBtn = document.getElementById("add-item-btn");
+
+      function bindRemove(btn) {
+        btn.addEventListener("click", function () {
+          const rows = body.querySelectorAll("tr");
+          if (rows.length <= 1) return; // keep at least 1 row
+          btn.closest("tr").remove();
+        });
+      }
+
+      body.querySelectorAll(".remove-btn").forEach(bindRemove);
+
+      addBtn.addEventListener("click", function () {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>
+            <select name="product_id" required style="width: 85%; padding: 10px 10px; border: 1px solid #cfcfcf; border-radius: 8px;">
+              <option value="" selected disabled>Select product</option>
+              {% for p in products %}
+                <option value="{{ p.id }}">{{ p.name }}</option>
+              {% endfor %}
+            </select>
+          </td>
+          <td><input name="quantity" type="number" min="1" placeholder="Quantity" required></td>
+          <td><button type="button" class="remove-btn">X</button></td>
+        `;
+        body.appendChild(tr);
+        bindRemove(tr.querySelector(".remove-btn"));
+      });
+    })();
+  </script>
+</body>
+</html>
+
